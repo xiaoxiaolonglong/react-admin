@@ -1,6 +1,6 @@
 import React, {Component} from 'react'
 import {Card, Table, Space, Button} from 'antd'
-import {PlusOutlined} from '@ant-design/icons';
+import {PlusOutlined,ArrowRightOutlined} from '@ant-design/icons';
 
 import AddForm from './add-form'
 import UpdateForm from './update-form'
@@ -15,18 +15,57 @@ export default class Category extends Component{
             showUpdate:false,//修改框的展示和显示
             data:[],
             category:{},//修改的数据
+            type:"parent",//展示父级分类
+            parentId:0,//查询列表的id
         }
     }
     componentDidMount() {
         this.getCategory()
     }
 
-    // 获取一级分类
+    // 获取分类
     getCategory = async () => {
-        let result = await categoryList({parentId:0})
+        let result = await categoryList({parentId:this.state.parentId})
         this.setState({
             data:result.data
         })
+    }
+    // 查看子分类
+    openChildren = (data) => {
+        this.setState({
+            type:data.name,
+            parentId:data._id
+        })
+        this.getCategory()
+    }
+    // 关闭子分类
+    closeChildren = () => {
+        this.setState({
+            type:"parent",
+            parentId:0
+        })
+        this.getCategory()
+    }
+    // 打开添加窗口
+    openAdd = () => {
+        this.setState({showAdd:true})
+    }
+    // 隐藏添加窗口
+    hideAdd = () => {
+        this.setState({showAdd: false})
+        this.getCategory()
+    }
+    // 打开修改窗口
+    openUpdate = (data) => {
+        this.setState({
+            category:data,
+            showUpdate:true
+        })
+    }
+    // 隐藏修改窗口
+    hideUpdate = () => {
+        this.setState({showUpdate: false})
+        this.getCategory()
     }
     render() {
         const columns = [
@@ -41,35 +80,32 @@ export default class Category extends Component{
                 width:300,
                 render: (text, record) => (
                     <Space size="middle">
-                        <Button type={"link"} onClick={() => openUpdate(record)}>修改分类</Button>
-                        <Button type={"link"}>查看子分类</Button>
+                        <Button type={"link"} onClick={() => this.openUpdate(record)}>修改分类</Button>
+                        <Button type={"link"} onClick={() => this.openChildren(record)}>查看子分类</Button>
                     </Space>
                 ),
             },
         ]
-        // 打开添加窗口
-        const openAdd = (data) => {
-            this.setState({showAdd:true})
-        }
-        // 打开修改窗口
-        const openUpdate = (data) => {
-            this.setState({
-                category:data,
-                showUpdate:true
-            })
+        // 设置页面title
+        const setTtitle = (type) => {
+            if(type === "parent"){
+                return "一级分类列表"
+            }else{
+                return (<span><Button type={"link"} onClick={() => this.closeChildren()}>返回上一级</Button><ArrowRightOutlined />  {type}</span>)
+            }
         }
         // 添加分类按钮
         const extra = (
-            <Button type='primary' onClick={openAdd}>
+            <Button type='primary' onClick={this.openAdd}>
                 <PlusOutlined/>添加
             </Button>
         )
         return(
-            <Card title="一级分类列表" extra={extra}>
+            <Card title={setTtitle(this.state.type)} extra={extra}>
                 {/*由于接口返回的数据没有key，使用rowKey指定_id字段为key*/}
                 <Table columns={columns} rowKey={"_id"} dataSource={this.state.data} bordered loading={false}/>
-                <AddForm categoryList={this.state.data} showAdd={this.state.showAdd} hideAdd={() => this.setState({showAdd: false})}/>
-                <UpdateForm categoryName={this.state.category.name} showUpdate={this.state.showUpdate} hideUpdate={() => this.setState({showUpdate: false})}/>
+                <AddForm categoryList={this.state.data} showAdd={this.state.showAdd} hideAdd={this.hideAdd}/>
+                <UpdateForm id={this.state.category._id} categoryName={this.state.category.name} showUpdate={this.state.showUpdate} hideUpdate={this.hideUpdate}/>
             </Card>
         )
     }

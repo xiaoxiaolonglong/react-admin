@@ -7,3 +7,7 @@ import ajax from './ajax'
 export const reqLogin = (username, password) => ajax('/login', {username, password}, 'POST')
 // 获取分类列表
 export const categoryList = ({parentId}) => ajax('/manage/category/list', {parentId}, 'GET')
+//添加一集或二级分类
+export const addCategory = ({parentId,categoryName}) => ajax('manage/category/add', {parentId,categoryName}, 'POST')
+//修改一集或二级分类
+export const updateCategory = ({categoryId,categoryName}) => ajax('manage/category/update', {categoryId,categoryName}, 'POST')
